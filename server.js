@@ -6,7 +6,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3001;
 
 const db = mysql.createConnection({
     host: "viaduct.proxy.rlwy.net",
@@ -26,6 +26,10 @@ db.connect((err) => {
 
 app.use(cors());
 app.use(bodyParser.json());
+
+app.get('/', (req, res) => {
+  return res.send('hello World')
+})
 
 // Rota de exemplo para obter perfis
 app.get('/perfis', (req, res) => {
