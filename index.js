@@ -4,16 +4,16 @@ const cors = require('cors');
 const mysql = require('mysql2');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
- 
+
 const app = express();
 const port = process.env.PORT || 3001;
 
 const db = mysql.createConnection({
-    host: "viaduct.proxy.rlwy.net",
-    user: "root",
-    password: "FjegCDlSwqWWHRSFamYWInphKJoJKMdF",
-    port: "54732",
-    database: "railway"
+  host: "viaduct.proxy.rlwy.net",
+  user: "root",
+  password: "FjegCDlSwqWWHRSFamYWInphKJoJKMdF",
+  port: "54732",
+  database: "railway"
 });
 
 db.connect((err) => {
@@ -68,12 +68,39 @@ app.post('/registro', (req, res) => {
     }
   });
 });
+// Rota para atualizar os dados de um usuário
+// Rota para atualizar os dados de um usuário
+app.put('/usuarios/:id', (req, res) => {
+  const userId = req.params.id;
+  const { nome, email, senha } = req.body;
+
+  // Verifique se todos os campos estão presentes
+  if (!nome || !email || !senha) {
+    return res.status(400).send('Nome, Email e senha são obrigatórios');
+  }
+
+  // Realize a atualização no banco de dados
+  const query = 'UPDATE usuarios SET nome = ?, senha = ? WHERE email = ?';
+  db.query(query, [nome, senha, email], (err, result) => {
+    if (err) {
+      console.error('Erro ao atualizar usuário:', err);
+      res.status(500).send('Erro interno no servidor');
+    } else {
+      if (result.affectedRows > 0) {
+        res.json({ message: 'Usuário atualizado com sucesso!' });
+      } else {
+        res.status(404).send('Usuário não encontrado');
+      }
+    }
+  });
+});
+
 
 // Rota para autenticar um usuário
 app.post('/autenticacao', (req, res) => {
   const { email, senha } = req.body;
 
-  const query = 'SELECT * FROM usuarios WHERE email = ? AND senha = ?' ;
+  const query = 'SELECT * FROM usuarios WHERE email = ? AND senha = ?';
   db.query(query, [email, senha], (err, result) => {
     if (err) {
       console.error('Erro ao autenticar usuário:', err);
@@ -81,7 +108,13 @@ app.post('/autenticacao', (req, res) => {
     } else {
       if (result.length > 0) {
         // Usuário autenticado com sucesso, agora gera um token
-        const token = jwt.sign({ email: result[0].email, userId: result[0].id }, 'secreto', { expiresIn: '1h' });
+        const tokenPayload = {
+          email: result[0].email,
+          userId: result[0].id,
+          nome: result[0].nome // Adicione o nome do usuário ao payload do token
+        };
+        const token = jwt.sign(tokenPayload, 'secreto', { expiresIn: '1h' });
+        console.log('Token gerado:', token); // Adicione este console.log para verificar o token gerado
         res.json({ message: 'Autenticação bem-sucedida!', usuario: result[0], token });
       } else {
         res.status(401).send('Credenciais inválidas');
