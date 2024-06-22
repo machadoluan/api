@@ -9,11 +9,10 @@ const app = express();
 const port = process.env.PORT || 3001;
 
 const db = mysql.createConnection({
-  host: "viaduct.proxy.rlwy.net",
+  host: "localhost",
   user: "root",
-  password: "FjegCDlSwqWWHRSFamYWInphKJoJKMdF",
-  port: "54732",
-  database: "railway"
+  port: "3306",
+  database: "usuarios"
 });
 
 db.connect((err) => {
@@ -213,6 +212,30 @@ app.delete('/entradas/:id', (req, res) => {
     }
   });
 });
+
+
+// Rota para deletar uma saida específica do banco de dados
+
+app.delete('/saidas/:id', (req, res) => {
+  const saidasId = req.params.id;
+
+  // Realize a exclusão no banco de dados
+  const query = 'DELETE FROM saidas WHERE id = ?';
+  db.query(query, [saidasId], (err, result) => {
+    if (err) {
+      console.error('Erro ao deletar saida:', err);
+      res.status(500).send('Erro interno no servidor');
+    } else {
+      if (result.affectedRows > 0) {
+        res.json({ message: 'saida deletada com sucesso!' });
+      } else {
+        res.status(404).send('saida não encontrada');
+      }
+    }
+  });
+});
+
+
 
 
 
